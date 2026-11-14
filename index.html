@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How fast can you type?</title>
+<style>
+:root{
+  --bg:#f3f0ff;--card:rgba(255,255,255,.7);--text:#1b1633;--muted:#6f6a8c;--line:rgba(80,60,160,.16);
+  --a:#6d5dfc;--b:#ff5fa2;--c:#22d3ee;--ok:#12a36f;--bad:#e5484d;--field:rgba(255,255,255,.9);--grid:rgba(80,60,160,.07);
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#07060f;--card:rgba(255,255,255,.055);--text:#f5f3ff;--muted:#a19cc4;--line:rgba(255,255,255,.12);--a:#8b7dff;--b:#ff6fb1;--c:#38e1ff;--ok:#3ddc97;--bad:#ff6b70;--field:rgba(255,255,255,.07);--grid:rgba(255,255,255,.05);}
+}
+:root[data-theme="dark"]{--bg:#07060f;--card:rgba(255,255,255,.055);--text:#f5f3ff;--muted:#a19cc4;--line:rgba(255,255,255,.12);--a:#8b7dff;--b:#ff6fb1;--c:#38e1ff;--ok:#3ddc97;--bad:#ff6b70;--field:rgba(255,255,255,.07);--grid:rgba(255,255,255,.05);}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden;position:relative}
+
+/* background layers */
+.aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(40% 35% at 20% 25%,color-mix(in srgb,var(--a) 55%,transparent),transparent 70%),
+   radial-gradient(35% 35% at 80% 20%,color-mix(in srgb,var(--b) 45%,transparent),transparent 70%),
+   radial-gradient(40% 40% at 70% 85%,color-mix(in srgb,var(--c) 38%,transparent),transparent 70%);
+  filter:blur(40px);animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate(0,0) rotate(0) scale(1)}50%{transform:translate(4%,-3%) rotate(8deg) scale(1.1)}100%{transform:translate(-4%,4%) rotate(-6deg) scale(1.05)}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%);
+  animation:gridmove 12s linear infinite}
+@keyframes gridmove{to{background-position:44px 44px}}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+
+/* floating keycaps */
+.key{position:fixed;z-index:1;pointer-events:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-weight:800;color:var(--text);
+  background:var(--card);border:1px solid var(--line);box-shadow:0 6px 0 var(--line),0 18px 30px -12px var(--a);backdrop-filter:blur(8px);
+  opacity:.8;animation:bob 6s ease-in-out infinite}
+.k1{top:12%;left:7%}.k2{top:68%;left:5%;animation-delay:-2s;transform:rotate(-10deg)}
+.k3{top:16%;right:8%;animation-delay:-4s}.k4{top:74%;right:7%;animation-delay:-1s}
+@keyframes bob{0%,100%{translate:0 0;rotate:-6deg}50%{translate:0 -18px;rotate:8deg}}
+@media (max-width:520px){.key{width:34px;height:34px;font-size:.8rem;border-radius:9px}}
+
+.view{display:none;position:relative;z-index:2;min-height:100vh;padding:24px 18px;align-items:center;justify-content:center}
+.view.on{display:flex}
+.wrap{width:100%;max-width:470px;text-align:center}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border:1px solid var(--line);border-radius:99px;font-size:.8rem;color:var(--muted);background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin-bottom:24px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+h1{font-size:clamp(2.5rem,10vw,4rem);line-height:1.02;margin:0 0 16px;font-weight:900;letter-spacing:-.035em}
+h1 .w{display:inline-block;opacity:0;transform:translateY(34px) rotate(4deg);animation:rise .8s cubic-bezier(.2,.9,.25,1.2) forwards;animation-delay:calc(var(--i)*.09s + .1s)}
+@keyframes rise{to{opacity:1;transform:none}}
+.grad{background:linear-gradient(90deg,var(--a),var(--b),var(--c),var(--a));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.lead{color:var(--muted);margin:0 0 34px;font-size:1.08rem;opacity:0;animation:fade .8s .7s forwards}
+@keyframes fade{to{opacity:1}}
+.cta{opacity:0;animation:fade .8s 1s forwards}
+
+.btn{position:relative;overflow:hidden;display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:1.05rem;color:#fff;padding:17px 32px;border-radius:18px;
+  background:linear-gradient(90deg,var(--a),var(--b));box-shadow:0 14px 34px -10px var(--a);transition:transform .2s,box-shadow .2s}
+.btn::after{content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:sweep 3s ease-in-out infinite}
+@keyframes sweep{0%{left:-70%}55%,100%{left:130%}}
+.btn:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 20px 40px -10px var(--b)}
+.btn:active{transform:scale(.96)}
+.btn.pulse{animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a) 60%,transparent)}70%{box-shadow:0 0 0 20px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.btn.ghost{background:var(--card);color:var(--text);box-shadow:none;border:1px solid var(--line);padding:12px 20px;font-size:.95rem;font-weight:700}
+.btn.ghost::after{display:none}
+
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:26px 20px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.5);animation:cardin .7s cubic-bezier(.2,.9,.25,1.1) both}
+@keyframes cardin{from{opacity:0;transform:translateY(40px) scale(.95)}}
+.card.glow::before{content:"";position:absolute;inset:-2px;border-radius:30px;z-index:-1;background:linear-gradient(120deg,var(--a),var(--b),var(--c),var(--a));background-size:300% 300%;animation:shine 4s linear infinite;filter:blur(14px);opacity:.7}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.back{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:4px;transition:color .2s,transform .2s}
+.back:hover{color:var(--text);transform:translateX(-3px)}
+.lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 8px;text-align:left}
+.row{display:flex;gap:8px}
+input{width:100%;font:inherit;color:var(--text);background:var(--field);border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:var(--a);box-shadow:0 0 0 4px color-mix(in srgb,var(--a) 25%,transparent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 22px}
+.chip{border:1px solid var(--line);background:var(--field);color:var(--text);font:inherit;font-size:.85rem;padding:6px 13px;border-radius:99px;cursor:pointer;transition:transform .15s,border-color .15s}
+.chip:hover{border-color:var(--a);transform:translateY(-2px)}
+.word{font-size:clamp(2.3rem,12vw,3.8rem);font-weight:900;letter-spacing:.06em;margin:6px 0 18px;word-break:break-word;min-height:1.2em}
+.word span{display:inline-block;transition:color .15s}
+.word .ok{color:var(--ok);text-shadow:0 0 20px color-mix(in srgb,var(--ok) 60%,transparent)}
+.word .bad{color:var(--bad)}.word .todo{color:var(--muted);opacity:.4}
+.word .pop{animation:pop .3s cubic-bezier(.2,2,.4,1)}
+@keyframes pop{0%{transform:scale(.4) translateY(10px)}100%{transform:none}}
+#typer{font-size:1.5rem;text-align:center;padding:16px;font-weight:700}
+#typer.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+.res{margin-top:22px;min-height:112px}
+.ms{font-size:3.3rem;font-weight:900;animation:zoom .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes zoom{from{transform:scale(.3);opacity:0}}
+.stats{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.stat{background:var(--field);border:1px solid var(--line);border-radius:14px;padding:9px 15px;font-size:.8rem;color:var(--muted);animation:fade .5s both}
+.stat:nth-child(2){animation-delay:.12s}.stat:nth-child(3){animation-delay:.24s}
+.stat b{display:block;color:var(--text);font-size:1.1rem}
+.hint{color:var(--muted);font-size:.95rem;padding-top:36px;animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.45}}
+.best{margin-top:12px;font-size:.85rem;color:var(--muted)}
+.lb{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);text-align:left}
+.lbhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 10px}
+select{font:inherit;color:var(--text);background:var(--field);border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;max-width:50%}
+.lbl{list-style:none;margin:0;padding:0}
+.lbl li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:var(--field);border:1px solid var(--line);margin-bottom:6px;animation:fade .4s both}
+.lbl li.me{border-color:var(--a);box-shadow:0 0 0 2px color-mix(in srgb,var(--a) 25%,transparent)}
+.lbl li.empty{color:var(--muted);justify-content:center}
+.rk{width:26px;text-align:center;font-weight:800}.nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tm{font-weight:800;color:var(--a)}
+.lbnote{font-size:.82rem;color:var(--muted);margin-top:8px;min-height:1em}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="aurora"></div><div class="grid"></div>
+<canvas id="fx"></canvas>
+<div class="key k1">C</div><div class="key k2">U</div><div class="key k3">P</div><div class="key k4">⚡</div>
+
+<section class="view" id="v-start">
+  <div class="wrap">
+    <div class="pill"><span class="dot"></span>Typing speed test</div>
+    <h1><span class="w" style="--i:0">How</span> <span class="w" style="--i:1">fast</span> <span class="w" style="--i:2">can</span><br><span class="w" style="--i:3">you</span> <span class="w grad" style="--i:4">type?</span></h1>
+    <p class="lead">One word. One timer. Find out in milliseconds.</p>
+    <div class="cta"><button class="btn pulse" id="go">Click here to start the test →</button></div>
+  </div>
+</section>
+
+<section class="view" id="v-test">
+  <div class="wrap">
+    <div class="top">
+      <button class="back" id="back">← Back</button>
+      <span class="pill" style="margin:0"><span class="dot"></span>Timer starts on first key</span>
+    </div>
+    <div class="card glow">
+      <p class="lab">Your word</p>
+      <div class="row">
+        <input id="custom" maxlength="24" placeholder="CUP" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Custom word">
+        <button class="btn ghost" id="set">Set</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="word" id="word"></div>
+      <input id="typer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Start typing…" aria-label="Type the word">
+      <div class="res" id="res"><div class="hint">Waiting for you…</div></div>
+      <button class="btn" id="again" style="display:none;margin-top:14px">Try again</button>
+      <div class="best" id="best"></div>
+      <div class="lb">
+        <p class="lab">Your name (for the leaderboard)</p>
+        <input id="name" maxlength="16" placeholder="Name" autocomplete="nickname" spellcheck="false" aria-label="Your name">
+        <div class="lbhead"><b>🏆 Leaderboard</b><select id="lbword" aria-label="Word"></select></div>
+        <ol class="lbl" id="lbl"></ol>
+        <div class="lbnote" id="lbnote"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var DEFAULT="CUP",target=DEFAULT,start=null,done=false,bests={};
+  var last=0,keys=[],pending=null,db=null,uid=null,canWrite=true,lbSel="",rows=[],typer=$("typer"),wordEl=$("word"),res=$("res"),again=$("again"),bestEl=$("best"),custom=$("custom");
+  var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try{bests=JSON.parse(localStorage.getItem("typebest")||"{}")||{};}catch(e){bests={};}
+
+  /* ---------- particles ---------- */
+  var cv=$("fx"),cx=cv.getContext("2d"),W=0,H=0,dpr=1,P=[],C=[],mouse={x:-999,y:-999},cols=[];
+  function readCols(){var s=getComputedStyle(document.documentElement);cols=["--a","--b","--c","--ok"].map(function(k){return s.getPropertyValue(k).trim()||"#8b7dff"});}
+  function size(){
+    dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+    cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+    var n=Math.min(90,Math.round(W*H/14000));P=[];
+    for(var i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4-.1,r:Math.random()*2+.8,c:i%3});
+  }
+  addEventListener("resize",size);
+  addEventListener("pointermove",function(e){mouse.x=e.clientX;mouse.y=e.clientY});
+  addEventListener("pointerleave",function(){mouse.x=mouse.y=-999});
+  function burst(x,y,n){
+    for(var i=0;i<n;i++){
+      var a=Math.random()*Math.PI*2,s=Math.random()*9+3;
+      C.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-5,r:Math.random()*5+3,rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:1,c:Math.floor(Math.random()*4)});
+    }
+  }
+  function frame(){
+    cx.clearRect(0,0,W,H);
+    var i,j,p,q,dx,dy,d;
+    for(i=0;i<P.length;i++){
+      p=P[i];
+      if(!still){
+        dx=p.x-mouse.x;dy=p.y-mouse.y;d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120&&d>0){p.x+=dx/d*1.6;p.y+=dy/d*1.6;}
+        p.x+=p.vx;p.y+=p.vy;
+        if(p.x<-10)p.x=W+10;if(p.x>W+10)p.x=-10;if(p.y<-10)p.y=H+10;if(p.y>H+10)p.y=-10;
+      }
+      cx.globalAlpha=.8;cx.fillStyle=cols[p.c];
+      cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fill();
+      for(j=i+1;j<P.length;j++){
+        q=P[j];dx=p.x-q.x;dy=p.y-q.y;d=dx*dx+dy*dy;
+        if(d<10000){cx.globalAlpha=(1-d/10000)*.35;cx.strokeStyle=cols[p.c];cx.lineWidth=1;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);cx.stroke();}
+      }
+    }
+    for(i=C.length-1;i>=0;i--){
+      p=C[i];p.vy+=.3;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life-=.012;
+      if(p.life<=0||p.y>H+30){C.splice(i,1);continue;}
+      cx.save();cx.globalAlpha=Math.min(1,p.life*1.5);cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=cols[p.c];
+      cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cx.restore();
+    }
+    cx.globalAlpha=1;
+    requestAnimationFrame(frame);
+  }
+  readCols();size();frame();
+  if(window.matchMedia)matchMedia("(prefers-color-scheme: dark)").addEventListener&&matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){setTimeout(readCols,50)});
+
+  /* ---------- routing ---------- */
+  function route(){
+    var t=location.hash.replace("#","")==="test";
+    $("v-start").classList.toggle("on",!t);
+    $("v-test").classList.toggle("on",t);
+    if(t)reset();
+  }
+  $("go").onclick=function(e){
+    if(!still){var r=e.currentTarget.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,50);}
+    setTimeout(function(){location.hash="test"},still?0:350);
+  };
+  $("back").onclick=function(){location.hash="start"};
+  addEventListener("hashchange",route);
+
+  ["CUP","Hello","Banana","Keyboard"].forEach(function(w){
+    var b=document.createElement("button");b.className="chip";b.textContent=w;
+    b.onclick=function(){custom.value=w;setWord();typer.focus();};
+    $("chips").appendChild(b);
+  });
+  function setWord(){
+    var v=custom.value.replace(/[\u200b-\u200d\ufeff]/g,"").trim();
+    if(v.length===1){res.innerHTML='<div class="hint" style="color:var(--bad)">Pick a word with at least 2 letters. One letter finishes instantly, so there’s nothing to time.</div>';custom.focus();return;}
+    target=v||DEFAULT;lbSel="";reset();renderLB();
+  }
+  $("set").onclick=setWord;
+  custom.addEventListener("keydown",function(e){if(e.key==="Enter"){setWord();typer.focus();}});
+
+  /* ---------- test ---------- */
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+  function renderWord(val){
+    var h="";
+    for(var i=0;i<target.length;i++){
+      var c="todo";
+      if(i<val.length)c=val[i].toLowerCase()===target[i].toLowerCase()?"ok":"bad";
+      if(i===val.length-1)c+=" pop";
+      h+='<span class="'+c+'">'+(target[i]===" "?"&nbsp;":esc(target[i]))+'</span>';
+    }
+    wordEl.innerHTML=h;
+  }
+  function renderBest(){
+    var b=bests[target.toLowerCase()];
+    bestEl.textContent=b?"Best for “"+target+"”: "+Math.round(b)+" ms":"";
+  }
+  function reset(){
+    start=null;last=0;keys=[];pending=null;done=false;typer.value="";typer.disabled=false;setNote("");
+    renderWord("");renderBest();
+    res.innerHTML='<div class="hint">Waiting for you…</div>';
+    again.style.display="none";
+    if($("v-test").classList.contains("on"))typer.focus();
+  }
+  function countUp(el,to){
+    if(still){el.textContent=Math.round(to)+" ms";return;}
+    var t0=performance.now();
+    (function s(t){var k=Math.min(1,(t-t0)/700);el.textContent=Math.round(to*(1-Math.pow(1-k,3)))+" ms";if(k<1)requestAnimationFrame(s);})(t0);
+  }
+  typer.addEventListener("input",function(){
+    if(done)return;
+    var v=typer.value;
+    if(v.length-last>1){start=null;last=0;keys=[];typer.value="";renderWord("");res.innerHTML='<div class="hint" style="color:var(--bad)">Several letters appeared at once (autocomplete or paste). Type it letter by letter!</div>';return;}
+    var now=performance.now();
+    if(v.length===0){start=null;keys=[];}
+    else if(start===null)start=now;
+    if(keys.length>v.length)keys.length=v.length;
+    if(v.length>keys.length&&start!==null)keys.push(Math.round((now-start)*10)/10);
+    renderWord(v);last=v.length;
+    if(v.length>=target.length){
+      if(v.toLowerCase()===target.toLowerCase()){
+        var ms=now-start;
+        if(ms<=0||ms<(target.length-1)*40){start=null;last=0;keys=[];typer.value="";renderWord("");res.innerHTML='<div class="hint" style="color:var(--bad)">Too fast to be real! Type it by hand.</div>';return;}
+        done=true;typer.disabled=true;
+        var k=target.toLowerCase(),prev=bests[k],nb=!prev||ms<prev;
+        if(nb){bests[k]=ms;try{localStorage.setItem("typebest",JSON.stringify(bests));}catch(e){}}
+        var sec=ms/1000,cps=target.length/sec,wpm=(target.length/5)/(sec/60);
+        res.innerHTML='<div class="ms grad" id="msn">0 ms</div>'+
+          '<div class="stats"><div class="stat"><b>'+sec.toFixed(3)+'s</b>time</div>'+
+          '<div class="stat"><b>'+cps.toFixed(1)+'</b>chars/sec</div>'+
+          '<div class="stat"><b>'+Math.round(wpm)+'</b>WPM</div></div>'+
+          (nb?'<div class="best">🎉 New personal best!</div>':'');
+        countUp($("msn"),ms);
+        again.style.display="inline-block";renderBest();
+        pending={w:target,ms:Math.round(ms*10)/10,keys:keys.slice()};submit();
+        if(!still){var r=res.getBoundingClientRect();burst(r.left+r.width/2,r.top+30,nb?140:80);if(nb)setTimeout(function(){burst(W*.2,H*.4,50);burst(W*.8,H*.4,50)},250);}
+      }else{
+        typer.classList.add("shake");
+        setTimeout(function(){typer.classList.remove("shake")},350);last=0;keys=[];
+        typer.value="";renderWord("");
+        res.innerHTML='<div class="hint" style="color:var(--bad)">Typo! Timer is still running…</div>';
+      }
+    }
+  });
+  again.onclick=reset;
+  typer.addEventListener("paste",function(e){e.preventDefault()});
+  typer.addEventListener("drop",function(e){e.preventDefault()});
+  document.addEventListener("keydown",function(e){if(done&&e.key==="Enter"&&e.target.tagName!=="INPUT")reset();});
+
+  /* ---------- leaderboard ---------- */
+  function valid(e){
+    try{
+      if(!e||typeof e.w!=="string"||typeof e.k!=="string"||e.w.length<2||e.w.length>24||e.k!==e.w.toLowerCase())return false;
+      var k=e.keys,n=e.w.length;
+      if(!Array.isArray(k)||k.length!==n||typeof e.ms!=="number"||!isFinite(e.ms))return false;
+      if(k[0]!==0)return false;
+      for(var i=1;i<n;i++){if(typeof k[i]!=="number"||k[i]-k[i-1]<30)return false;}
+      if(Math.abs(k[n-1]-e.ms)>2||e.ms>120000)return false;
+      return true;
+    }catch(x){return false;}
+  }
+  function setNote(t){var n=$("lbnote");if(n)n.textContent=t||"";}
+  var nameEl=$("name");
+  try{nameEl.value=localStorage.getItem("typename")||"";}catch(e){}
+  nameEl.addEventListener("change",function(){
+    try{localStorage.setItem("typename",nameEl.value.trim());}catch(e){}
+    submit();
+  });
+  async function submit(){
+    if(!pending)return;
+    var nm=nameEl.value.trim().slice(0,16);
+    if(pending.w.length<2){setNote("Leaderboard needs a word with 2+ letters.");pending=null;return;}
+    if(!nm){setNote("Type your name above to add this score to the leaderboard.");return;}
+    if(!db||!uid){setNote("Sign in to claude.ai to post to the leaderboard.");return;}
+    if(!canWrite){setNote("Read-only view: ask the owner for Contributor access to post scores.");return;}
+    var p=pending;pending=null;
+    var e={k:p.w.toLowerCase(),w:p.w,ms:p.ms,keys:p.keys,t:Date.now()};
+    if(!valid(e)){setNote("That score didn’t pass the check, so it wasn’t added.");return;}
+    try{
+      var ref=db.doc("scores/"+uid),snap=await ref.get(),d=snap.exists?snap.data():{},old=Array.isArray(d.best)?d.best:[];
+      var prev=old.filter(function(x){return x.k===e.k})[0];
+      if(prev&&valid(prev)&&prev.ms<=e.ms){setNote("Your best for “"+e.w+"” on the board is already faster ("+Math.round(prev.ms)+" ms).");return;}
+      var list=old.filter(function(x){return x.k!==e.k});
+      list.push(e);
+      await ref.set({name:nm,best:list});
+      setNote("✅ Added to the leaderboard!");
+    }catch(err){setNote("Couldn’t add your score ("+((err&&err.code)||"error")+").");}
+  }
+  function renderLB(){
+    var sel=lbSel||target.toLowerCase(),words={};
+    words[target.toLowerCase()]=target;
+    function ents(r){return Array.isArray(r.best)?r.best:[];}
+    rows.forEach(function(r){ents(r).forEach(function(e){if(e&&typeof e.k==="string"&&typeof e.w==="string"&&!words[e.k])words[e.k]=e.w.slice(0,24);});});
+    var s=$("lbword"),ks=Object.keys(words),sig=ks.join("|");
+    if(s.dataset.sig!==sig){s.innerHTML="";ks.forEach(function(k){var o=document.createElement("option");o.value=k;o.textContent=words[k];s.appendChild(o);});s.dataset.sig=sig;}
+    if(!words[sel])sel=target.toLowerCase();
+    s.value=sel;
+    var list=[];
+    rows.forEach(function(r){ents(r).forEach(function(e){if(e&&e.k===sel&&valid(e))list.push({n:String(r.name||"Anonymous").slice(0,16),ms:e.ms,me:r.id===uid});});});
+    list.sort(function(a,b){return a.ms-b.ms;});
+    var ol=$("lbl");ol.innerHTML="";
+    if(!list.length){var li=document.createElement("li");li.className="empty";li.textContent="No scores for this word yet. Be the first!";ol.appendChild(li);return;}
+    list.slice(0,10).forEach(function(x,i){
+      var li=document.createElement("li");if(x.me)li.className="me";
+      var a=document.createElement("span");a.className="rk";a.textContent=i===0?"🥇":i===1?"🥈":i===2?"🥉":String(i+1);
+      var b=document.createElement("span");b.className="nm";b.textContent=x.n;
+      var c=document.createElement("span");c.className="tm";c.textContent=Math.round(x.ms)+" ms";
+      li.appendChild(a);li.appendChild(b);li.appendChild(c);ol.appendChild(li);
+    });
+  }
+  $("lbword").addEventListener("change",function(){lbSel=this.value;renderLB();});
+  renderLB();
+  (async function(){
+    try{
+      if(!window.claude||!claude.use){setNote("The leaderboard isn’t available in this view.");return;}
+      var u=await claude.use("user"),d=await claude.use("db");
+      if(!d||!u){setNote("Sign in to claude.ai to see and join the leaderboard.");return;}
+      db=d;uid=await u.id();
+      canWrite=(await u.can("data.write"))!==false;
+      if(!uid){setNote("The leaderboard needs a signed-in viewer.");return;}
+      var timer=setTimeout(function(){setNote("The leaderboard can’t be reached yet…");},10000);
+      d.collection("scores").onSnapshot(function(snap){
+        clearTimeout(timer);
+        rows=snap.docs.map(function(x){var o=Object.assign({},x.data()||{});o.id=x.id;return o;});
+        renderLB();
+      },function(){clearTimeout(timer);setNote("Couldn’t load the leaderboard.");});
+      if(!canWrite)setNote("Read-only view: ask the owner for Contributor access to post scores.");
+    }catch(e){setNote("The leaderboard isn’t available in this view.");}
+  })();
+  route();
+})();
+</script>
+</body>
+</html>
