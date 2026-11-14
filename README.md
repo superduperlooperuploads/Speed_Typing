@@ -1,12 +1,11 @@
 # Speed_Typing
 Hello Everyone!
 This is speed typing
-Your Custom word-speed typing practice or typer
-The HTML file is the Speed-Typer!
+An open apk app and html website
 
-Have fun! :D 
-
-Bye :)
+This Website has a official Claude AI Support!
+Please do not pretend to be the owner of this project
+Only this is the official release by superduperuploads
 
 
 ~ Developers
